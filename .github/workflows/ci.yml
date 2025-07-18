@@ -38,15 +38,18 @@ jobs:
             exit 1
           fi
 
+      - name: Rename test results folder (avoid dot in artifact name)
+        run: mv testResults/TestResults.xcresult testResults/TestResultsBundle
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: success() || failure()
         with:
           name: test-results
-          path: testResults/TestResults.xcresult
+          path: testResults/TestResultsBundle
 
       - name: Process Test Results
         uses: kishikawakatsumi/xcresulttool@v1
         with:
-          path: testResults/TestResults.xcresult
+          path: testResults/TestResultsBundle
         if: success() || failure()
