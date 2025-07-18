@@ -11,20 +11,42 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Create test results directory
+        run: mkdir -p testResults
+
+      - name: Select Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode.app
 
       - name: Build and Test
         uses: sersoft-gmbh/xcodebuild-action@v3.2.0
         with:
           project: EPCollaboratif.xcodeproj
           scheme: EPCollaboratif
-          destination: 'platform=iOS Simulator,name=iPhone 14'
+          destination: 'platform=iOS Simulator,name=iPhone 16'
           action: test
-          result-bundle-path: 'TestResults/TestResults.xcresult'
-          xcargs: CODE_SIGNING_ALLOWED=NO
+          result-bundle-path: 'testResults/TestResults.xcresult'
+          args: CODE_SIGNING_ALLOWED=NO
+
+      - name: Check if Test Results Exist
+        run: |
+          if [ -d "testResults/TestResults.xcresult" ]; then
+            echo "✅ Test results found."
+          else
+            echo "❌ Test results not found."
+            exit 1
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: test-results
+          path: testResults/TestResults.xcresult
 
       - name: Process Test Results
         uses: kishikawakatsumi/xcresulttool@v1
         with:
-          path: TestResults/TestResults.xcresult
+          path: testResults/TestResults.xcresult
         if: success() || failure()
